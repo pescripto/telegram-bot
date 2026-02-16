@@ -1,7 +1,10 @@
 import time
 import os
+from asyncio import print_call_graph
+
 import feedparser
 import requests
+from bs4 import BeautifulSoup
 
 BOT_TOKEN = "8546136873:AAFVTHt_HKorMqW3lksLwnvyKFEpOJAmmWI"
 CHAT_ID = "-1002997050739"
@@ -15,6 +18,21 @@ FEEDS = [
     "https://www.infomoney.com.br/feed/",
     "https://portaldobitcoin.uol.com.br/feed/"
 ]
+def extrair_imagem(entry)
+    if hasattr(entry, "media_content"):
+        try:
+            return entry.media_content[0]["url"]
+        except:
+            pass
+        try:
+            r = requests.get(entry.link, timeout=10)
+            soup = BeautifulSoup(r.text, "html.parser")
+            og = soup.find("meta", property="og:image")
+            if og and og.get("content")
+                return og["content"]
+        except:
+            pass
+        return None
 
 def carregar_historico():
     if os.path.exists(ARQUIVO_HISTORICO):
@@ -27,18 +45,26 @@ def salvar_historico(historico):
         for link in historico:
             f.write(link + "\n")
 
-def enviar_telegram(mensagem):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+def enviar_texto(mensagem):
+    url = f"https://api.telegram.org/bot{8546136873:AAFVTHt_HKorMqW3lksLwnvyKFEpOJAmmWI}/sendMessage"
     payload = {
-        "chat_id": CHAT_ID,
-        "message_thread_id": TOPIC_ID,
+        "chat_id": -1002997050739,
+        "message_thread_id": 9,
         "text": mensagem,
         "disable_web_page_preview": True
     }
-    try:
-        requests.post(url, data=payload, timeout=10)
-    except Exception as e:
-        print("Erro ao enviar mensagem:", e)
+    requests.post(url, data=payload, timeout=10)
+
+
+def enviar_com_imagem(titulo, link, image_url):
+    url = f"https://api.telegram.org/bot{AAFVTHt_HKorMqW3lksLwnvyKFEpOJAmmWI}/sendPhoto"
+    payload = {
+        "chat_id": -1002997050739,
+        "message_thread_id": 9,
+        "photo": image_url,
+        "caption": f"📰 {titulo}\n{link}"
+    }
+    requests.post(url, data=payload, timeout=10)
 
 print("🚀 Bot de notícias CRIPTO/MACRO iniciado")
 
@@ -57,9 +83,12 @@ while True:
                     continue
 
                 titulo = entry.title.strip()
-                mensagem = f"📰 {titulo}\n{entry.link}"
+                imagem = extrair_imagem(entry)
 
-                enviar_telegram(mensagem)
+                if imagem:
+                    enviar_com_imagem(titulo, entry.link, imagem)
+                else:
+                    enviar_texto(f"📰 {titulo}\n{entry.link}")
                 historico.add(entry.link)
                 salvar_historico(historico)
 
